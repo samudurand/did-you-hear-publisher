@@ -10,7 +10,7 @@ import * as cheerio from 'cheerio';
 
 export const logger = new Logger({
     serviceName: 'summary-generator',
-    logLevel: 'ERROR',
+    logLevel: 'INFO',
 });
 
 const bedrockClient = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
@@ -42,14 +42,14 @@ async function fetchPageContent(url: string): Promise<string> {
 
 async function generateSummary(content: string): Promise<string> {
     try {
-        const prompt = `Please provide a concise one or two sentence summary of this announcement or blog post: ${content}`;
+        const prompt = `Please provide a concise summary of the following announcement, retrieved from a web page. The summary shouldn't be between 1 and 3 sentences, and no more than 100 words. Prefer shorter rather than longer. The goal is to give an idea of what the announcement is about, especially what AWS services or features are new, changing, or disappearing.  : """${content}"""`;
         
         const command = new InvokeModelCommand({
             modelId: 'amazon.titan-text-express-v1',
             body: JSON.stringify({
                 inputText: prompt,
                 textGenerationConfig: {
-                    maxTokenCount: 130, // Around 50 to 100 words
+                    maxTokenCount: 150, // Around 50 to 100 words
                     temperature: 0.7,
                     topP: 1
                 }
@@ -58,10 +58,26 @@ async function generateSummary(content: string): Promise<string> {
         });
 
         const response = await bedrockClient.send(command);
+        
+        if (!response.body) {
+            logger.error('Empty response received from Bedrock');
+            throw new Error('Empty response from Bedrock');
+        }
+
         const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-        return responseBody.completion.trim();
+
+        const summary = responseBody.results?.[0]?.outputText;
+        if (!summary) {
+            logger.error(`Invalid response format from Bedrock: ${JSON.stringify(responseBody)}`);
+            throw new Error('Invalid response format from Bedrock');
+        }
+
+        return summary.trim();
     } catch (error) {
         logger.error(`Error generating summary: ${error}`);
+        if (error instanceof SyntaxError) {
+            throw new Error('Failed to parse Bedrock response');
+        }
         throw new Error('Failed to generate summary');
     }
 }
