@@ -44,7 +44,7 @@ The last component is made up of two lambdas, one for the daily publication and 
 
 Currently the deployment is done from local via the CLI, with the possibility to deploy either to a `Development` or `Production` environment. 
 
-**AWS note**: If you use profiles to connect to AWS, you will need to execute `AWS_PROFILE={your profile name}` before continuing.
+**AWS note**: If you use profiles to connect to AWS, you will need to execute `export AWS_PROFILE={your profile name}` before continuing.
 
 ### Setup
 
@@ -88,7 +88,6 @@ npx cdk bootstrap -c env=prod
 Then run the cdk deployment, from the **root** of the project:
 
 ```bash
-
 npm run deploy -- -c env=dev
 # or
 npm run deploy -- -c env=prod
@@ -101,6 +100,22 @@ Once deployed, you can find the URL of the UI in the outputs of the CDK command.
 The last step is to create a user in the Cognito pool. You can do that in the AWS console.
 
 ## Development
+
+### Local Lambda testing
+
+Lambdas can be executed locally for development purpose. 
+
+From inside the cdk folder, run:
+
+```sh
+npx cdk synth --all -c env=local --require-approval never
+```
+
+Then find in the cdk.out folder which `*.template.json` file refers to the stack that contains your Lambda. Then run:
+
+```sh
+sam local invoke -t ./cdk.out/WebappInfraStack.template.json summariesGeneratorLambda
+```
 
 ### Tests
 
