@@ -42,16 +42,27 @@ async function fetchPageContent(url: string): Promise<string> {
 
 async function generateSummary(content: string): Promise<string> {
     try {
-        const prompt = `Please provide a concise summary of the following announcement, retrieved from a web page. The summary shouldn't be between 1 and 3 sentences, and no more than 100 words. Prefer shorter rather than longer. The goal is to give an idea of what the announcement is about, especially what AWS services or features are new, changing, or disappearing.  : """${content}"""`;
+        const prompt = `Context: Considering the following announcement \n
+                        """${content}""" \n
+
+                        Task: Write a short text sharing what feature is announced, but skipping mentions of AWS region availability. As if a colleague was sharing a news with another colleage.\n
+                        \n
+                        
+                        Do not describe AWS services already existing prior to the new feature release.\n
+                        Do not use terms like "Introducing" at the beginning of the text. \n                        
+                        Do not mention if the feature is available via CLI or SDK. \n
+                        Avoid too many repetitions of the same verbs. \n
+                        Prefer single sentence texts, and never go beyond 3 sentences.
+                        `;
         
         const command = new InvokeModelCommand({
             modelId: 'amazon.titan-text-express-v1',
             body: JSON.stringify({
                 inputText: prompt,
                 textGenerationConfig: {
-                    maxTokenCount: 150, // Around 50 to 100 words
-                    temperature: 0.7,
-                    topP: 1
+                    maxTokenCount: 130, // Around 40 to 80 words
+                    temperature: 0.4,
+                    topP: 0.9
                 }
             }),
             contentType: 'application/json',

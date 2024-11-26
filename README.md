@@ -114,7 +114,7 @@ npx cdk synth --all -c env=local --require-approval never
 Then find in the cdk.out folder which `*.template.json` file refers to the stack that contains your Lambda. Then run:
 
 ```sh
-sam local invoke -t ./cdk.out/WebappInfraStack.template.json summariesGeneratorLambda
+sam local invoke -t ./cdk.out/WebappInfraStack.template.json summariesGeneratorLambda -e test/example-lambda-url-event.json
 ```
 
 ### Tests
