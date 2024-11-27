@@ -46,20 +46,20 @@ export class WebappInfraStack extends cdk.Stack {
             config: props.config,
             infoItemsTable: this.infoItemsTable,
         });
-        const lambdaUrlDomain = getLambdaURL(itemCreator.lambdaUrl);
+        const itemCreatorLambdaURL = getLambdaURL(itemCreator.lambdaUrl);
         
         // Lambda handling summaries generation
         const summariesGenerator = new SummariesGeneratorLambda(this, 'SummariesGeneratorLambda', {
             config: props.config,
         });
-        // const lambdaUrlDomain = getLambdaURL(itemCreator.lambdaUrl);
+        const summariesGeneratorLambdaURL = getLambdaURL(summariesGenerator.lambdaUrl);
         
 
         // Lambda@Edge function for authentication against Cognito
         const authFunction = this.createAuthEdgeFunction(itemCreator);
 
         // Cloudfront distribution redirecting to the website and the Lambda URL
-        const webappCFDistribution = this.createCloudFrontDistribution(webappBucket, lambdaUrlDomain, authFunction);
+        const webappCFDistribution = this.createCloudFrontDistribution(webappBucket, itemCreatorLambdaURL, summariesGeneratorLambdaURL, authFunction);
         const websiteURL = `https://${webappCFDistribution.distributionDomainName}`;
 
         // Authentication user pool
@@ -105,7 +105,12 @@ export class WebappInfraStack extends cdk.Stack {
         return { publisherUserPoolIdParam, publisherUserPoolClientIdParam };
     }
 
-    private createCloudFrontDistribution(webappBucket: WebsiteBucket, lambdaUrlDomain: string, authFunction: cdk.aws_cloudfront.experimental.EdgeFunction) {
+    private createCloudFrontDistribution(
+        webappBucket: WebsiteBucket, 
+        itemCreatorLambdaURL: string, 
+        summariesGeneratorLambdaURL: string, 
+        authFunction: cdk.aws_cloudfront.experimental.EdgeFunction
+    ) {
         return new cloudfront.CloudFrontWebDistribution(this, 'WebappCFDistribution', {
             originConfigs: [
                 {
@@ -119,12 +124,28 @@ export class WebappInfraStack extends cdk.Stack {
                 },
                 {
                     customOriginSource: {
-                        domainName: lambdaUrlDomain,
+                        domainName: itemCreatorLambdaURL,
                         originProtocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
                     },
                     behaviors: [{
                         isDefaultBehavior: false,
-                        pathPattern: '/api/*',
+                        pathPattern: '/api/creator/*',
+                        allowedMethods: cloudfront.CloudFrontAllowedMethods.ALL,
+                        lambdaFunctionAssociations: [{
+                            eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
+                            lambdaFunction: authFunction.currentVersion,
+                            includeBody: true
+                        }],
+                    }],
+                },
+                {
+                    customOriginSource: {
+                        domainName: summariesGeneratorLambdaURL,
+                        originProtocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+                    },
+                    behaviors: [{
+                        isDefaultBehavior: false,
+                        pathPattern: '/api/summary/*',
                         allowedMethods: cloudfront.CloudFrontAllowedMethods.ALL,
                         lambdaFunctionAssociations: [{
                             eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,

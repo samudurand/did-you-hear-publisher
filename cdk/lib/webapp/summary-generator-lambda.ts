@@ -11,8 +11,7 @@ interface SummariesGeneratorLambdaProps {
 }
 
 /**
- * Lambda that retrieves content from a URL and generates summaries
- * storing them in the infoItems DynamoDB table
+ * Lambda function that processes content using Amazon Bedrock to generate summaries
  */
 export class SummariesGeneratorLambda extends Construct {
 
@@ -34,7 +33,6 @@ export class SummariesGeneratorLambda extends Construct {
             }
         });
 
-        // Add Bedrock permissions
         summariesGeneratorLambda.addToRolePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             actions: [
@@ -45,7 +43,7 @@ export class SummariesGeneratorLambda extends Construct {
 
         this.lambda = summariesGeneratorLambda;
         this.lambdaUrl = summariesGeneratorLambda.addFunctionUrl({
-            authType: lambda.FunctionUrlAuthType.NONE,
+            authType: lambda.FunctionUrlAuthType.AWS_IAM,
         });
     }
 }

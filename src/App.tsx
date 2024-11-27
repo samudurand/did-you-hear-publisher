@@ -107,7 +107,7 @@ function App() {
                 itemType: selectedContentType,
             };
 
-            const response = await axios.post('/api/', requestBody, {
+            const response = await axios.post('/api/creator/', requestBody, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

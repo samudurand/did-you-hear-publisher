@@ -45,9 +45,8 @@ async function generateSummary(content: string): Promise<string> {
         const prompt = `Context: Considering the following announcement \n
                         """${content}""" \n
 
-                        Task: Write a short text sharing what feature is announced, but skipping mentions of AWS region availability. As if a colleague was sharing a news with another colleage.\n
+                        Task: Write a short text sharing what feature is announced. As if a colleague was sharing the news with another colleague.\n
                         \n
-                        
                         Do not describe AWS services already existing prior to the new feature release.\n
                         Do not use terms like "Introducing" at the beginning of the text. \n                        
                         Do not mention if the feature is available via CLI or SDK. \n
