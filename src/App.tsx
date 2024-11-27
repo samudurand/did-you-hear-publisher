@@ -25,6 +25,8 @@ function App() {
     const [selectedContentType, setSelectedContentType] = useState('NEW');
     const [errorMessage, setErrorMessage] = useState('');
     const [token, setToken] = useState('');
+    const [pageUrl, setPageUrl] = useState('');
+    const [generatedSummary, setGeneratedSummary] = useState('');
 
     useEffect(() => {
         const cognitoUser = userPool.getCurrentUser();
@@ -91,6 +93,34 @@ function App() {
         setSelectedContentType(event.target.value);
     };
 
+    const handlePageUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
+        setPageUrl(event.target.value);
+    };
+
+    const handleUrlSubmit = async (event: FormEvent) => {
+        event.preventDefault();
+        
+        try {
+            const requestBody = {
+                url: pageUrl
+            };
+
+            const response = await axios.post('/api/creator/', requestBody, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.status === 200) {
+                setGeneratedSummary(response.data.summary);
+            } else {
+                setErrorMessage('An error occurred generating the summary. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setErrorMessage('An unexpected error occurred generating the summary. Please try again.');
+        }
+    };
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -132,6 +162,33 @@ function App() {
     return (
         <Container className="App">
             <header className="App-header">
+                <Form className="FormContainer" onSubmit={handleUrlSubmit}>
+                    <Form.Group controlId="formPageUrl" className="mb-3 d-flex align-items-center">
+                        <Form.Control
+                            type="text"
+                            value={pageUrl}
+                            onChange={handlePageUrlChange}
+                            placeholder="Enter page URL to generate summary suggestions"
+                            className="me-2 flex-grow-1"
+                        />
+                        <Button variant="secondary" type="submit" className="SummaryButton">
+                            Generate
+                        </Button>
+                    </Form.Group>
+                    {generatedSummary && (
+                        <Form.Group controlId="generatedSummary" className="mb-3 d-flex align-items-center">
+                            <Form.Text className="form-control bg-light me-2 flex-grow-1">
+                                {generatedSummary}
+                            </Form.Text>
+                            <Button variant="dark" type="submit" className="SummaryButton">
+                                Apply
+                            </Button>
+                        </Form.Group>
+                    )}                    
+                </Form>
+
+                <hr className="hr Separator" />
+
                 <Form className="FormContainer" onSubmit={handleSubmit}>
 
                     <Form.Group controlId="formTitle">
@@ -207,7 +264,7 @@ function App() {
                         </Col>
                     </Row>
 
-                    <Button className="SubmitButton" variant="primary" type="submit">
+                    <Button className="SubmitButton" variant="success" type="submit">
                         Submit
                     </Button>
                 </Form>
