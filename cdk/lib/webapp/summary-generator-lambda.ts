@@ -8,6 +8,7 @@ import { WebappConfig } from '../../config/WebappConfig';
 
 interface SummariesGeneratorLambdaProps {
     config: WebappConfig;
+    requestTimeout: Duration;
 }
 
 /**
@@ -26,7 +27,7 @@ export class SummariesGeneratorLambda extends Construct {
             entry: 'lambda-src/summaries-generator/handler.ts',
             handler: 'handler',
             runtime: lambda.Runtime.NODEJS_18_X,
-            timeout: Duration.seconds(30),
+            timeout: props.requestTimeout,
             memorySize: 256,
             environment: {
                 LOG_LEVEL: props.config.logLevel,

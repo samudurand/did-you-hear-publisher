@@ -105,7 +105,7 @@ function App() {
                 url: pageUrl
             };
 
-            const response = await axios.post('/api/creator/', requestBody, {
+            const response = await axios.post('/api/summary/', requestBody, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

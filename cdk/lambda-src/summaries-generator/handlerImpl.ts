@@ -45,21 +45,40 @@ async function generateSummary(content: string): Promise<string> {
         const prompt = `Context: Considering the following announcement \n
                         """${content}""" \n
 
-                        Task: Write a short text sharing what feature is announced. As if a colleague was sharing the news with another colleague.\n
-                        \n
-                        Do not describe AWS services already existing prior to the new feature release.\n
-                        Do not use terms like "Introducing" at the beginning of the text. \n                        
-                        Do not mention if the feature is available via CLI or SDK. \n
-                        Avoid too many repetitions of the same verbs. \n
-                        Prefer single sentence texts, and never go beyond 3 sentences.
+                        Task: Write a short message, sharing the feature that is being announced, as if you were describing the feature in a newsletter. The tone of the message should be professional and to the point, not trying to advertise the feature, but instead describe it objectively.
+                        Each message cannot contain more than 3 sentences.
+                        Do not describe AWS services already existing prior to the new feature release.
                         `;
+                        
+                        // const prompt = `Context: Considering the following announcement \n
+                        // """${content}""" \n
+
+                        // Task 1: Write a short message, sharing the feature that is being announced, as if you were describing the feature in a newsletter. The tone of the message should be professional and to the point, not trying to advertise the feature, but instead describe it objectively.
+                        // Each message cannot contain more than 3 sentences.
+                        // Do not describe AWS services already existing prior to the new feature release.
+
+                        // Task 2: Take the result of task 1 and reformulate it to write 2 other messages with the same content but a different writing style and different tones.
+
+                        // Return all 3 messages.
+                        // `;
+        // const prompt = `Context: Considering the following announcement \n
+        //                 """${content}""" \n
+
+        //                 Task: Write a short text sharing what feature is announced. As if a colleague was sharing the news with another colleague.\n
+        //                 \n
+        //                 Do not describe AWS services already existing prior to the new feature release.\n
+        //                 Do not use terms like "Introducing" at the beginning of the text. \n                        
+        //                 Do not mention if the feature is available via CLI or SDK. \n
+        //                 Avoid too many repetitions of the same verbs. \n
+        //                 Prefer single sentence texts, and never go beyond 3 sentences.
+        //                 `;
         
         const command = new InvokeModelCommand({
             modelId: 'amazon.titan-text-express-v1',
             body: JSON.stringify({
                 inputText: prompt,
                 textGenerationConfig: {
-                    maxTokenCount: 130, // Around 40 to 80 words
+                    maxTokenCount: 450, // Around 40 to 80 words
                     temperature: 0.4,
                     topP: 0.9
                 }
@@ -116,7 +135,7 @@ export async function lambdaHandler(event: APIGatewayProxyEventV2): Promise<APIG
         
         // Generate summary using Bedrock
         const summary = await generateSummary(content);
-        logger.debug(`Generated summary: ${summary}`);
+        logger.info(`Generated summary: ${summary}`);
 
         return {
             statusCode: 200,
