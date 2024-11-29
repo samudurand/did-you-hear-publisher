@@ -163,6 +163,11 @@ function App() {
         }
     };
 
+    const handleApplySummary = (event: FormEvent) => {
+        event.preventDefault();
+        setContentValue(generatedSummary);
+    };
+
     return (
         <Container className="App">
             <header className="App-header">
@@ -178,8 +183,10 @@ function App() {
                         <Button variant="secondary" type="submit" className="SummaryButton">
                             Generate
                         </Button>
-                    </Form.Group>
-                    {generatedSummary && (
+                    </Form.Group>          
+                </Form>
+                {generatedSummary && (
+                    <Form className="FormContainer" onSubmit={handleApplySummary}>                
                         <Form.Group controlId="generatedSummary" className="mb-3 d-flex align-items-center">
                             <Form.Text className="form-control bg-light me-2 flex-grow-1">
                                 {generatedSummary}
@@ -188,8 +195,8 @@ function App() {
                                 Apply
                             </Button>
                         </Form.Group>
-                    )}                    
-                </Form>
+                    </Form>
+                )}  
 
                 <hr className="hr Separator" />
 
@@ -278,3 +285,4 @@ function App() {
 }
 
 export default App;
+

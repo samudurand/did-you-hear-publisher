@@ -2,7 +2,7 @@
 
 ## What is it?
 
-This project is the backend of a Slack bot designed to publish daily news and regular summaries about news worthy topics. We use it internally to publish regular updates about AWS services and publications.
+This project is the backend of a Slack bot designed to publish daily news and regular summaries. It uses Amazon Bedrock's AI capabilities to automatically generate summaries, or you can write them manually. The bot helps you efficiently share information about news worthy topics. We use it internally to publish regular updates about AWS services and publications.
 
 The **serverless** infrastructure necessary is deployed to AWS using [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/home.html).
 
@@ -28,7 +28,7 @@ This application is composed of 3 main components, which compose the overall arc
 
 #### UI Frontend
 
-The first component is a simple React-based UI, in which you can enter the content. The syntax used for Urls and other special formatting is the [Slack API syntax](https://api.slack.com/reference/surfaces/formatting).  
+The first component is a simple React-based UI, in which you can enter the content and choose whether to use Amazon Bedrock for generating summaries. When enabled, Bedrock will automatically generate a concise summary of your message using advanced AI. The syntax used for Urls and other special formatting is the [Slack API syntax](https://api.slack.com/reference/surfaces/formatting).  
 
 ![Architecture](docs/ui-view.png)
 
