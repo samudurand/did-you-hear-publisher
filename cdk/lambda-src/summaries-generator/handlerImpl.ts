@@ -45,11 +45,10 @@ async function generateSummary(content: string): Promise<string> {
         const prompt = `Context: Considering the following announcement \n
                         """${content}""" \n
 
-                        Task: Write a short message, sharing the feature that is being announced, as if you were describing the feature in a newsletter. The tone of the message should be professional and to the point, not trying to advertise the feature, but instead describe it objectively.
-                        Each message cannot contain more than 3 sentences.
+                        Task: Write a short text of at most 3 sentences, sharing the feature that is being announced, as if you were describing the feature in a newsletter. 
                         Do not describe AWS services already existing prior to the new feature release.
                         `;
-                        
+
                         // const prompt = `Context: Considering the following announcement \n
                         // """${content}""" \n
 
@@ -78,7 +77,7 @@ async function generateSummary(content: string): Promise<string> {
             body: JSON.stringify({
                 inputText: prompt,
                 textGenerationConfig: {
-                    maxTokenCount: 450, // Around 40 to 80 words
+                    maxTokenCount: 130, // Around 40 to 80 words
                     temperature: 0.4,
                     topP: 0.9
                 }

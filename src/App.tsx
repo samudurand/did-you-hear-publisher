@@ -1,6 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import './App.css';
-import { Container, Form, Button, Alert, Row, Col } from 'react-bootstrap'; // Import Row and Col for layout
+import { Container, Form, Button, Alert, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
 import {
     CognitoAccessToken,
@@ -10,6 +10,10 @@ import {
     CognitoUserPool,
     CognitoUserSession,
 } from 'amazon-cognito-identity-js';
+
+interface SummaryResponse {
+    summary: string;
+}
 
 const userPool = new CognitoUserPool({
     UserPoolId: process.env.REACT_APP_COGNITO_USER_POOL_ID || "missing",
@@ -105,7 +109,7 @@ function App() {
                 url: pageUrl
             };
 
-            const response = await axios.post('/api/summary/', requestBody, {
+            const response = await axios.post<SummaryResponse>('/api/summary/', requestBody, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
