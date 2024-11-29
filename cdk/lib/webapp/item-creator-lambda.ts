@@ -4,7 +4,7 @@ import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { WebappConfig } from '../../config/WebappConfig';
 
-interface ItemCreatorStackProps {
+interface ItemCreatorLambdaProps {
     config: WebappConfig;
     infoItemsTable: dynamodb.Table;
 }
@@ -12,12 +12,12 @@ interface ItemCreatorStackProps {
 /**
  * Lambda creating a new infoItem in the infoItems DynamoDB table
  */
-export class ItemCreatorStack extends Construct {
+export class ItemCreatorLambda extends Construct {
 
     public readonly lambdaUrl: lambda.FunctionUrl;
     public readonly lambda: lambdaNode.NodejsFunction;
 
-    constructor(scope: Construct, id: string, props: ItemCreatorStackProps) {
+    constructor(scope: Construct, id: string, props: ItemCreatorLambdaProps) {
         super(scope, id);
 
         const itemCreatorLambda = new lambdaNode.NodejsFunction(this, 'itemCreatorLambda', {

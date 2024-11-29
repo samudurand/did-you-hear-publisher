@@ -10,6 +10,14 @@
   margin-top: 10px;
 }
 
+.SummaryButton {
+  width: 120px;
+}
+
+.Separator {
+  margin-top: 2rem;
+}
+
 .FormContainer .alert {
   margin-top: 15px;
 }

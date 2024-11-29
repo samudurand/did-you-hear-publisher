@@ -108,7 +108,7 @@ async function signAndForwardRequest(cfRequest, signV4Options, apiUrl) {
     const result = await axios({
         ...signed,
         url: apiUrl.href, // compulsory,
-        timeout: 5000,
+        timeout: 30000,
         data: signV4Options.body,
     });
 

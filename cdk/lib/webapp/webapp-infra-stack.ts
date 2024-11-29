@@ -3,7 +3,7 @@ import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import { WebsiteBucket } from './website-bucket';
-import { ItemCreatorStack } from './item-creator-stack';
+import { ItemCreatorLambda } from './item-creator-lambda';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { WebappConfig } from '../../config/WebappConfig';
@@ -11,6 +11,7 @@ import { PublisherUserPool } from './publisher-cognito-user-pool';
 import path = require('path');
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import { SummariesGeneratorLambda } from './summary-generator-lambda';
 
 
 export interface WebappInfraStackProps extends cdk.StackProps {
@@ -31,6 +32,7 @@ export class WebappInfraStack extends cdk.Stack {
     public readonly s3Bucket: s3.Bucket;
     public readonly cfDistribution: cloudfront.CloudFrontWebDistribution;
     public readonly infoItemsTable: dynamodb.Table;
+    private readonly summaryGenerationTimeout: cdk.Duration = cdk.Duration.seconds(30);
 
     constructor(scope: Construct, id: string, props: WebappInfraStackProps) {
         super(scope, id, props);
@@ -41,18 +43,25 @@ export class WebappInfraStack extends cdk.Stack {
         this.infoItemsTable = this.createItemsTable();
         
         // Lambda handling new publications
-        const itemCreator = new ItemCreatorStack(this, 'ItemCreatorStack', {
+        const itemCreator = new ItemCreatorLambda(this, 'ItemCreatorStack', {
             config: props.config,
             infoItemsTable: this.infoItemsTable,
         });
-        const lambdaUrlDomain = getLambdaURL(itemCreator.lambdaUrl);
+        const itemCreatorLambdaURL = getLambdaURL(itemCreator.lambdaUrl);
+        
+        // Lambda handling summaries generation
+        const summariesGenerator = new SummariesGeneratorLambda(this, 'SummariesGeneratorLambda', {
+            config: props.config,
+            requestTimeout: this.summaryGenerationTimeout,
+        });
+        const summariesGeneratorLambdaURL = getLambdaURL(summariesGenerator.lambdaUrl);
         
 
         // Lambda@Edge function for authentication against Cognito
-        const authFunction = this.createAuthEdgeFunction(itemCreator);
+        const authFunction = this.createAuthEdgeFunction(itemCreator, summariesGenerator);
 
         // Cloudfront distribution redirecting to the website and the Lambda URL
-        const webappCFDistribution = this.createCloudFrontDistribution(webappBucket, lambdaUrlDomain, authFunction);
+        const webappCFDistribution = this.createCloudFrontDistribution(webappBucket, itemCreatorLambdaURL, summariesGeneratorLambdaURL, authFunction);
         const websiteURL = `https://${webappCFDistribution.distributionDomainName}`;
 
         // Authentication user pool
@@ -98,7 +107,12 @@ export class WebappInfraStack extends cdk.Stack {
         return { publisherUserPoolIdParam, publisherUserPoolClientIdParam };
     }
 
-    private createCloudFrontDistribution(webappBucket: WebsiteBucket, lambdaUrlDomain: string, authFunction: cdk.aws_cloudfront.experimental.EdgeFunction) {
+    private createCloudFrontDistribution(
+        webappBucket: WebsiteBucket, 
+        itemCreatorLambdaURL: string, 
+        summariesGeneratorLambdaURL: string, 
+        authFunction: cdk.aws_cloudfront.experimental.EdgeFunction
+    ) {
         return new cloudfront.CloudFrontWebDistribution(this, 'WebappCFDistribution', {
             originConfigs: [
                 {
@@ -112,12 +126,28 @@ export class WebappInfraStack extends cdk.Stack {
                 },
                 {
                     customOriginSource: {
-                        domainName: lambdaUrlDomain,
+                        domainName: itemCreatorLambdaURL,
                         originProtocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
                     },
                     behaviors: [{
                         isDefaultBehavior: false,
-                        pathPattern: '/api/*',
+                        pathPattern: '/api/creator/*',
+                        allowedMethods: cloudfront.CloudFrontAllowedMethods.ALL,
+                        lambdaFunctionAssociations: [{
+                            eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
+                            lambdaFunction: authFunction.currentVersion,
+                            includeBody: true
+                        }],
+                    }],
+                },
+                {
+                    customOriginSource: {
+                        domainName: summariesGeneratorLambdaURL,
+                        originProtocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+                    },
+                    behaviors: [{
+                        isDefaultBehavior: false,
+                        pathPattern: '/api/summary/*',
                         allowedMethods: cloudfront.CloudFrontAllowedMethods.ALL,
                         lambdaFunctionAssociations: [{
                             eventType: cloudfront.LambdaEdgeEventType.ORIGIN_REQUEST,
@@ -130,7 +160,7 @@ export class WebappInfraStack extends cdk.Stack {
         });
     }
 
-    private createAuthEdgeFunction(itemCreator: ItemCreatorStack) {
+    private createAuthEdgeFunction(itemCreator: ItemCreatorLambda, summariesGenerator: SummariesGeneratorLambda) {
         const authFunction = new cloudfront.experimental.EdgeFunction(this, 'CognitoAuthLambdaEdge', {
             handler: 'authEdge.handler',
             runtime: lambda.Runtime.NODEJS_16_X,
@@ -148,14 +178,17 @@ export class WebappInfraStack extends cdk.Stack {
             currentVersionOptions: {
                 removalPolicy: cdk.RemovalPolicy.DESTROY
             },
-            timeout: cdk.Duration.seconds(7),
+            timeout: this.summaryGenerationTimeout,
         });
 
         authFunction.addToRolePolicy(new PolicyStatement({
             sid: 'AllowInvokeFunctionUrl',
             effect: Effect.ALLOW,
             actions: ['lambda:InvokeFunctionUrl'],
-            resources: [itemCreator.lambda.functionArn],
+            resources: [
+                itemCreator.lambda.functionArn,
+                summariesGenerator.lambda.functionArn
+            ],
             conditions: {
                 "StringEquals": { "lambda:FunctionUrlAuthType": "AWS_IAM" }
             }

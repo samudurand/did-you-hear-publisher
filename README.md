@@ -2,7 +2,7 @@
 
 ## What is it?
 
-This project is the backend of a Slack bot designed to publish daily news and regular summaries about news worthy topics. We use it internally to publish regular updates about AWS services and publications.
+This project is the backend of a Slack bot designed to publish daily news and regular summaries. It uses Amazon Bedrock's AI capabilities to automatically generate summaries, or you can write them manually. The bot helps you efficiently share information about news worthy topics. We use it internally to publish regular updates about AWS services and publications.
 
 The **serverless** infrastructure necessary is deployed to AWS using [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/home.html).
 
@@ -28,7 +28,7 @@ This application is composed of 3 main components, which compose the overall arc
 
 #### UI Frontend
 
-The first component is a simple React-based UI, in which you can enter the content. The syntax used for Urls and other special formatting is the [Slack API syntax](https://api.slack.com/reference/surfaces/formatting).  
+The first component is a simple React-based UI, in which you can enter the content and choose whether to use Amazon Bedrock for generating summaries. When enabled, Bedrock will automatically generate a concise summary of your message using advanced AI. The syntax used for Urls and other special formatting is the [Slack API syntax](https://api.slack.com/reference/surfaces/formatting).  
 
 ![Architecture](docs/ui-view.png)
 
@@ -44,7 +44,7 @@ The last component is made up of two lambdas, one for the daily publication and 
 
 Currently the deployment is done from local via the CLI, with the possibility to deploy either to a `Development` or `Production` environment. 
 
-**AWS note**: If you use profiles to connect to AWS, you will need to execute `AWS_PROFILE={your profile name}` before continuing.
+**AWS note**: If you use profiles to connect to AWS, you will need to execute `export AWS_PROFILE={your profile name}` before continuing.
 
 ### Setup
 
@@ -88,7 +88,6 @@ npx cdk bootstrap -c env=prod
 Then run the cdk deployment, from the **root** of the project:
 
 ```bash
-
 npm run deploy -- -c env=dev
 # or
 npm run deploy -- -c env=prod
@@ -101,6 +100,22 @@ Once deployed, you can find the URL of the UI in the outputs of the CDK command.
 The last step is to create a user in the Cognito pool. You can do that in the AWS console.
 
 ## Development
+
+### Local Lambda testing
+
+Lambdas can be executed locally for development purpose. 
+
+From inside the cdk folder, run:
+
+```sh
+npx cdk synth --all -c env=local --require-approval never
+```
+
+Then find in the cdk.out folder which `*.template.json` file refers to the stack that contains your Lambda. Then run:
+
+```sh
+sam local invoke -t ./cdk.out/WebappInfraStack.template.json summariesGeneratorLambda -e test/example-lambda-url-event.json
+```
 
 ### Tests
 

@@ -1,0 +1,41 @@
+{
+    "version": "2.0",
+    "routeKey": "$default",
+    "rawPath": "/",
+    "rawQueryString": "",
+    "headers": {
+       "content-length": "8",
+       "x-amzn-tls-version": "TLSv1.3",
+       "x-forwarded-proto": "https",
+       "postman-token": "61fce278-a046-40c0-b0b9-a803d12a0e78",
+       "x-forwarded-port": "443",
+       "x-forwarded-for": "46.11.179.114",
+       "accept": "*/*",
+       "x-amzn-tls-cipher-suite": "TLS_AES_128_GCM_SHA256",
+       "x-amzn-trace-id": "Root=1-67409114-75036612056040c37da5a0e2",
+       "host": "eizc26ysfso7d6oq24yywuwstq0fwtdi.lambda-url.eu-central-1.on.aws",
+       "content-type": "application/json",
+       "accept-encoding": "gzip, deflate, br",
+       "user-agent": "PostmanRuntime/7.42.0"
+    },
+    "requestContext": {
+       "accountId": "anonymous",
+       "apiId": "eizc26ysfso7d6oq24yywuwstq0fwtdi",
+       "domainName": "eizc26ysfso7d6oq24yywuwstq0fwtdi.lambda-url.eu-central-1.on.aws",
+       "domainPrefix": "eizc26ysfso7d6oq24yywuwstq0fwtdi",
+       "http": {
+          "method": "POST",
+          "path": "/",
+          "protocol": "HTTP/1.1",
+          "sourceIp": "46.11.179.114",
+          "userAgent": "PostmanRuntime/7.42.0"
+       },
+       "requestId": "430c3eae-1b3f-40ed-bb58-6d7b4b08f285",
+       "routeKey": "$default",
+       "stage": "$default",
+       "time": "22/Nov/2024:14:11:32 +0000",
+       "timeEpoch": 1732284692820
+    },
+    "body": "{\n\"url\":\"https://aws.amazon.com/about-aws/whats-new/2024/11/amazon-s3-functionality-conditional-writes/\"\n}",
+    "isBase64Encoded": false
+ }
